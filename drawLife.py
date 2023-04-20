@@ -10,9 +10,9 @@ rectSize = 8
 white = (255, 255, 255)
 
 
-def getDrawing(life):
+def getDrawing(life, mouseDown):
     board = set([])
-    mouseDown = False
+    # mouseDown = False
     drawing = True
     while drawing:
         for evt in pygame.event.get():
@@ -20,26 +20,30 @@ def getDrawing(life):
                 if evt.button == 3:
                     life.running = False
                     life.drawn = False
-                    return None
+                    if mouseDown is False:
+                        return None
 
                 mouseDown = True
                 x, y = evt.pos
                 rect = x - rectSize/2, y - rectSize/2, rectSize, rectSize
-                pygame.draw.rect(life.screen, white, rect)
+                # pygame.draw.rect(life.screen, white, rect)
+                pygame.draw.circle(life.screen, white, [x, y], 4)
                 pygame.display.flip()
                 board = addSets(rect, board, life)
 
             if evt.type == pygame.MOUSEMOTION and mouseDown:
                 x, y = evt.pos
                 rect = x - rectSize/2, y - rectSize/2, rectSize, rectSize
-                pygame.draw.rect(life.screen, white, rect)
+                # pygame.draw.rect(life.screen, white, rect)
+                pygame.draw.circle(life.screen, white, [x, y], 4)
                 pygame.display.flip()
                 board = addSets(rect, board, life)
 
             if evt.type == pygame.MOUSEBUTTONUP and mouseDown:
                 x, y = evt.pos
                 rect = x - rectSize/2, y - rectSize/2, rectSize, rectSize
-                pygame.draw.rect(life.screen, white, rect)
+                # pygame.draw.rect(life.screen, white, rect)
+                pygame.draw.circle(life.screen, white, [x, y], 4)
                 pygame.display.flip()
                 board = addSets(rect, board, life)
                 drawing = False

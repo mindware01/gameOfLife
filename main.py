@@ -80,7 +80,7 @@ def removeFromCircle(board, cx, cy, r):
 
 
 def isGlider(x, Y):
-    pass
+    pass  # TODO: identify glider for special coloring
 
 
 class Main:
@@ -95,7 +95,7 @@ class Main:
         self.xmax = 0
         self.ymax = 0
 
-        self.cellLives = dict()
+        self.cellLives = None
         self.xborder = self.xmax // self.scale
         self.yborder = self.ymax // self.scale
         self.cols = self.xmax // self.scale
@@ -124,9 +124,14 @@ class Main:
         self.squares = False
         self.whole = False
         self.drawn = False
+        self.addToDrawing = False
         self.stats = True
 
         self.settings = None
+
+        self.more_board = None
+        self.board = None
+        self.count = 0
 
     def updateLoop(self):
         while True:
@@ -174,30 +179,38 @@ class Main:
 
             initial_population = int(self.cols * self.rows * self.popPercent)
 
+            self.more_board = None
             while self.running or self.drawn:
-                board = set([])
+                self.count = 0
+                # board = set([])
 
                 # PATTERN TYPES
 
                 # RANDOM
                 if self.random:
-                    board = set((randint(self.margin, self.cols), randint(self.margin, self.rows)) for _ in range(initial_population))
+                    self.board = set((randint(self.margin, self.cols), randint(self.margin, self.rows)) for _ in
+                                     range(initial_population))
 
                 # CIRCLE
                 elif self.circle:
-                    marginO = 80/self.scale
-                    marginI = 240/self.scale
-                    board = set((randint(self.margin, self.cols), randint(self.margin, self.rows)) for _ in range(initial_population))
-                    boardA = putInCircle(board, int(self.cols/4), int(self.rows/2), int(self.rows/2) - marginO)
-                    boardA = removeFromCircle(boardA, int(self.cols/4), int(self.rows/2), int(self.rows/2) - marginI)
-                    boardB = putInCircle(board, int(self.cols/4) * 3, int(self.rows/2), int(self.rows/2) - marginO)
-                    boardB = removeFromCircle(boardB, int(self.cols/4) * 3, int(self.rows/2), int(self.rows/2) - marginI)
-                    board = boardA.union(boardB)
+                    marginO = 80 / self.scale
+                    marginI = 240 / self.scale
+                    self.board = set((randint(self.margin, self.cols), randint(self.margin, self.rows)) for _ in
+                                     range(initial_population))
+                    boardA = putInCircle(self.board, int(self.cols / 4), int(self.rows / 2),
+                                         int(self.rows / 2) - marginO)
+                    boardA = removeFromCircle(boardA, int(self.cols / 4), int(self.rows / 2),
+                                              int(self.rows / 2) - marginI)
+                    boardB = putInCircle(self.board, int(self.cols / 4) * 3, int(self.rows / 2),
+                                         int(self.rows / 2) - marginO)
+                    boardB = removeFromCircle(boardB, int(self.cols / 4) * 3, int(self.rows / 2),
+                                              int(self.rows / 2) - marginI)
+                    self.board = boardA.union(boardB)
 
                 # CIRCLE EDGE
                 elif self.circleEdge:
                     for i in range(40):
-                        center = int(self.rows/2 + i*20), int(self.rows/2)
+                        center = int(self.rows / 2 + i * 20), int(self.rows / 2)
                         radius = int(self.rows / 2 - 100)
                         it = 5000
                         inc = (math.pi * 2) / it
@@ -206,58 +219,58 @@ class Main:
                             m = radius
                             x = int(center[0] + (m * math.cos(angle)))
                             y = int(center[1] + (m * math.sin(angle)))
-                            board.add((x, y))
+                            self.board.add((x, y))
                             angle += inc
 
                 # VERTICAL
                 if self.vertical:
-                    board = set([])
+                    self.board = set([])
                     for row in range(int(self.rows)):
-                        cell = (int(self.cols/8), row)
-                        board.add(cell)
+                        cell = (int(self.cols / 8), row)
+                        self.board.add(cell)
                     for row in range(int(self.rows)):
-                        cell = (int(self.cols/8) * 3, row)
-                        board.add(cell)
+                        cell = (int(self.cols / 8) * 3, row)
+                        self.board.add(cell)
                     for row in range(int(self.rows)):
-                        cell = (int(self.cols/8) * 5, row)
-                        board.add(cell)
+                        cell = (int(self.cols / 8) * 5, row)
+                        self.board.add(cell)
                     for row in range(int(self.rows)):
-                        cell = (int(self.cols/8) * 7, row)
-                        board.add(cell)
+                        cell = (int(self.cols / 8) * 7, row)
+                        self.board.add(cell)
 
                 # HORIZONTAL
                 if self.horizontal:
-                    board = set([])
+                    self.board = set([])
                     for row in range(32, int(self.rows), 64):
                         for col in range(int(self.cols)):
                             cell = (col, row)
-                            board.add(cell)
+                            self.board.add(cell)
 
                 # RECTANGLES
                 def rectLife(leftR, topR, w, h, ):
                     for c in range(w):  # top line
                         cellR = (leftR + c, topR)
-                        board.add(cellR)
+                        self.board.add(cellR)
 
                     for c in range(w):  # bottom line
                         cellR = (leftR + c, topR + h)
-                        board.add(cellR)
+                        self.board.add(cellR)
 
                     for r in range(h):  # left line
                         cellR = (leftR, topR + r)
-                        board.add(cellR)
+                        self.board.add(cellR)
 
                     for r in range(h):  # right line
                         cellR = (leftR + w, topR + r)
-                        board.add(cellR)
+                        self.board.add(cellR)
 
                 # rectangles variation
                 if self.rectangles:
-                    board = set([])
-                    self.margin = int(self.rows/5)
+                    self.board = set([])
+                    self.margin = int(self.rows / 5)
                     rTop = self.margin
                     rLeft = self.margin
-                    rW = int(self.cols/2 - self.margin * 2)
+                    rW = int(self.cols / 2 - self.margin * 2)
                     rH = int(self.margin)
 
                     rectLife(rLeft, rTop, rW, rH)  # top left
@@ -269,8 +282,8 @@ class Main:
 
                 # squares variation
                 if self.squares:
-                    board = set([])
-                    self.margin = int(self.rows/5)
+                    self.board = set([])
+                    self.margin = int(self.rows / 5)
                     rTop = self.margin
                     rLeft = self.margin / 2
                     rW = self.margin
@@ -289,50 +302,64 @@ class Main:
                     rectLife(rL6, rTop, rW, rH)  # top 6
                     t2 = self.margin * 3
                     rectLife(rLeft, t2, rW, rH)  # bottom 7
-                    rectLife(rL2, t2, rW, rH)    # bottom 8
-                    rectLife(rL3, t2, rW, rH)    # bottom 9
-                    rectLife(rL4, t2, rW, rH)    # bottom 10
-                    rectLife(rL5, t2, rW, rH)    # bottom 11
-                    rectLife(rL6, t2, rW, rH)    # bottom 12
+                    rectLife(rL2, t2, rW, rH)  # bottom 8
+                    rectLife(rL3, t2, rW, rH)  # bottom 9
+                    rectLife(rL4, t2, rW, rH)  # bottom 10
+                    rectLife(rL5, t2, rW, rH)  # bottom 11
+                    rectLife(rL6, t2, rW, rH)  # bottom 12
 
                 # WHOLE
                 if self.whole:
-                    board = set([])
-                    rectLife(int(self.cols/2 - self.rows/2), 0, int(self.rows), int(self.rows)) #  - (self.scale * 1)
+                    self.board = set([])
+                    rectLife(int(self.cols / 2 - self.rows / 2), 0, int(self.rows),
+                             int(self.rows))  # - (self.scale * 1)
 
                 # DRAWN
                 if self.drawn:
-                    board = set([])
-                    board = drawLife.getDrawing(self)
-                    if len(board) < 100:
+                    if self.addToDrawing:
+                        self.addToDrawing = False
+                        self.more_board = drawLife.getDrawing(self, True)
+                        temp_board = self.board.copy()
+                        self.board = temp_board.union(self.more_board)
+                    else:
+                        self.board = set([])
+                        self.board = drawLife.getDrawing(self, False)
+                    if len(self.board) < 100:
                         break
-                    if board is None:
+                    if self.board is None:
                         continue
                     self.running = True
                     self.screen.fill(self.BLACK)
 
-                board = self.iterate(board)
+                self.board = self.iterate(self.board)
 
                 # cell entropy
-                self.cellLives = dict()
-                for x, y in board:
-                    self.cellLives[str(x) + "," + str(y)] = CellLife()
-                cell = (randint(0, self.maxCell[0]), randint(0, self.maxCell[1]))
-                board.add(cell)
-                cellL = CellLife()
-                cellL.clr = [255, 255, 255]
-                self.cellLives[keyStrGen(cell[0], cell[1])] = cellL
+                self.addColorEntropy(self.board)
 
                 done = 0
                 while True:
-                    if self.running is False:
+                    if self.running is False or self.addToDrawing:
                         break
                     self.screen.fill(self.BLACK)
 
                     startD = time.time()
-                    for x, y in board:
+                    for x, y in self.board:
+                        if self.drawn:
+                            for evt in pygame.event.get():
+                                print(evt.type)
+                                if evt.type == pygame.MOUSEBUTTONDOWN:
+                                    self.addToDrawing = True
+                                    break
+                                if evt.type == 768:  # tcod key down - quit to settings
+                                    self.running = False
+                                    self.drawn = False
+                                    break
+                        if self.addToDrawing:
+                            break
                         if pyGameExit() is True:
                             self.running = False
+                            break
+                        if self.running is False:
                             break
 
                         # glider = isGlider(x, y)
@@ -354,23 +381,27 @@ class Main:
                     endD = time.time() - startD
 
                     startI = time.time()
-                    board = self.iterate(board)
+                    self.board = self.iterate(self.board)
                     endI = time.time() - startI
+                    self.count += 1
 
                     # STATS
                     if self.stats:
-                        text = self.font.render("Draw: {:.4f}".format(endD), True, self.fontColor)
+                        text = self.font.render("Draw:  {:.4f}".format(endD), True, self.fontColor)
                         textPos = text.get_rect(topleft=(8, 8))
                         self.screen.blit(text, textPos)
-                        text = self.font.render("Iter: {:.4f}".format(endI), True, self.fontColor)
+                        text = self.font.render("Iter:  {:.4f}".format(endI), True, self.fontColor)
                         textPos = text.get_rect(topleft=(8, 24))
                         self.screen.blit(text, textPos)
-                        text = self.font.render("Cells: {}".format(len(board)), True, self.fontColor)
+                        text = self.font.render("Cells: {}".format(len(self.board)), True, self.fontColor)
                         textPos = text.get_rect(topleft=(8, 42))
+                        self.screen.blit(text, textPos)
+                        text = self.font.render("Count: {}".format(self.count), True, self.fontColor)
+                        textPos = text.get_rect(topleft=(8, 58))
                         self.screen.blit(text, textPos)
                     pygame.display.flip()
 
-                    if done >= len(board):
+                    if done >= len(self.board):
                         self.screen.fill(self.BLACK)
                         pygame.display.flip()
                         break
@@ -393,17 +424,25 @@ class Main:
 
             # insert new cellLife in new board if needed
             keyStr = keyStrGen(x, y)
-            if keyStr in self.cellLives:
-                pass
-            else:
-                self.cellLives[keyStr] = CellLife()
+            if self.cellLives is not None:
+                if keyStr in self.cellLives:
+                    pass
+                else:
+                    self.cellLives[keyStr] = CellLife()
 
         return new_board
+
+    def addColorEntropy(self, brd):
+        self.cellLives = dict()
+        for x, y in brd:
+            if keyStrGen(x, y) in self.cellLives is False:
+                self.cellLives[str(x) + "," + str(y)] = CellLife()
 
 
 class CellLife:
     def __init__(self):
         self.clr = [70, 0, 0]
+        self.maxIntensity = 255
         self.rState = 1
         self.gState = 0
         self.bState = 0
@@ -430,7 +469,7 @@ class CellLife:
         self.bStateUp = 1
         self.bPeak = 254
         self.bStateFall = 3
-        self.bEndVal = 80
+        self.bEndVal = 90
 
         self.decayed = False
 
@@ -438,7 +477,7 @@ class CellLife:
         self.__init__()
 
     def decay(self):
-        if self.clr == [255, 255, 255]:  # last gasp flash
+        if self.clr == [self.maxIntensity - 1, self.maxIntensity - 1, self.maxIntensity - 1]:  # last gasp flash
             self.clr = [0, 0, self.bEndVal]
             self.decayed = True
         if self.decayed:
@@ -448,7 +487,7 @@ class CellLife:
 
         # RED
         if self.rState == self.rStateUp:
-            if self.clr[0] < 255:
+            if self.clr[0] < self.maxIntensity:
                 self.clr[0] += decInc
             if self.clr[0] >= self.rPeakVal:
                 self.rState = self.rStateStay
@@ -462,7 +501,7 @@ class CellLife:
 
         # GREEN
         if self.gState == self.gStateUp:
-            if self.clr[1] < 255:
+            if self.clr[1] < self.maxIntensity:
                 self.clr[1] += decInc
             if self.clr[1] >= self.gPeakVal:
                 self.gState = self.gStateFall
@@ -474,17 +513,20 @@ class CellLife:
 
         # BLUE
         if self.bState == self.bStateUp:
-            if self.clr[2] < 255:
+            if self.clr[2] < self.maxIntensity:
                 self.clr[2] += decInc
             if self.clr[2] >= self.bPeak:
                 self.bState = self.bStateFall
         elif self.bState == self.bStateFall:
             self.clr[2] -= decInc
             if self.clr[2] == self.bEndVal + decInc:
-                self.clr = [255, 255, 255]  # flash before decayed completely
-        self.clr[0] = clamp(0, 255, self.clr[0])
-        self.clr[1] = clamp(0, 255, self.clr[1])
-        self.clr[2] = clamp(0, 255, self.clr[2])
+                # flash before decayed completely
+                # [self.maxIntensity, self.maxIntensity, self.maxIntensity]
+                # is reserved for special entities like spawned spaceships
+                self.clr = [self.maxIntensity - 1, self.maxIntensity - 1, self.maxIntensity - 1]
+        self.clr[0] = clamp(0, self.maxIntensity, self.clr[0])
+        self.clr[1] = clamp(0, self.maxIntensity, self.clr[1])
+        self.clr[2] = clamp(0, self.maxIntensity, self.clr[2])
 
         return self.decayed
 

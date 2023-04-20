@@ -1,3 +1,5 @@
+import webbrowser
+
 import pygame
 import pygame_widgets
 from pygame_widgets.textbox import TextBox
@@ -5,22 +7,23 @@ from pygame_widgets.toggle import Toggle
 from pygame_widgets.dropdown import Dropdown
 from pygame_widgets.button import Button
 import configparser
-import subprocess
 import os
+import urllib.request
 
-# pygame.init()
 
-run = True
+def github():
+    webbrowser.open_new('https://github.com/mindware01/gameOfLifeNebula')
 
 
 class Settings:
     def __init__(self, life):
-        xmax = 500  # Width of screen in pixels
-        ymax = 800  # Height of screen in pixels
+        self.xmax = 550  # Width of screen in pixels
+        self.xmax2 = 1100  # Width of extras screen in pixels
+        self.ymax = 800  # Height of screen in pixels
 
         self.life = life
         if self.life.screen is None:
-            self.screen = pygame.display.set_mode((xmax, ymax), 0, 24)
+            self.screen = pygame.display.set_mode((self.xmax, self.ymax), 0, 24)
         else:
             self.screen = life.screen
 
@@ -107,10 +110,28 @@ class Settings:
         self.runBtn = Button(self.screen, x, y + m, 60, 50, text='GO', fontSize=50, radius=10,
                              onClick=self.done)
 
+        y = self.ymax - 50
+        self.githubBtn = Button(self.screen, x, y + m, 80, 30, text='Github', fontSize=30, radius=10,
+                                onClick=github)
+
+        y = self.ymax - 50
+        self.moreButton = Button(self.screen, self.xmax - 90, y + m, 80, 30, text='more...', fontSize=30, radius=10,
+                                onClick=self.moreSettings)
+
         self.run = True
 
     def done(self):
         self.run = False
+
+    def moreSettings(self):
+        if self.screen.get_width() == self.xmax:
+            self.screen = pygame.display.set_mode((self.xmax2, self.ymax), 0, 24)
+            self.moreButton.string = "less..."
+            self.moreButton.text = self.moreButton.font.render(self.moreButton.string, True, self.moreButton.textColour)
+        else:
+            self.screen = pygame.display.set_mode((self.xmax, self.ymax), 0, 24)
+            self.moreButton.string = "more..."
+            self.moreButton.text = self.moreButton.font.render(self.moreButton.string, True, self.moreButton.textColour)
 
     def getSettings(self):
 
@@ -120,6 +141,7 @@ class Settings:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     self.run = False
+                    self.close()
                     quit()
 
             self.screen.fill((0, 0, 0))  # erase previous draw
@@ -150,7 +172,8 @@ class Settings:
         self.config['life']['screenheight'] = self.heightBox.getText()
         styleString = str(self.styleBox.getSelected())
         if styleString == 'None':
-            self.config['life']['style'] = "random"
+            # self.config['life']['style'] = self.styleBox.get("")
+            pass
         else:
             self.config['life']['style'] = self.choiceList[int(styleString)]
         self.config['life']['showdebuginfo'] = str(self.debugToggle.getValue())
@@ -165,3 +188,4 @@ class Settings:
         pygame_widgets.WidgetHandler.removeWidget(self.heightBox)
         pygame_widgets.WidgetHandler.removeWidget(self.styleBox)
         pygame_widgets.WidgetHandler.removeWidget(self.debugToggle)
+        pygame_widgets.WidgetHandler.removeWidget(self.githubBtn)
